@@ -67,7 +67,7 @@ endbracket        : ENDBRACKET values;
 
 values            : VALUES startbracket val comma2;
 
-val               : DIGIT
+val               :  DIGIT
                     | DOUBLE
                     | DATE
                     | BOOL
@@ -76,6 +76,7 @@ val               : DIGIT
 
 comma2            : COMMA val comma2
                     | endbrack;
+
 
 
 select            : SELECT; 
@@ -112,18 +113,19 @@ delete            : DELETE;
 cond              : name op val
                     | NOT cond;
 
-end               : END    { return 0; };
+end               : END  { return 0; };
 
 %%
 
 
 int yywrap(void)
 {
-     return 0;
+  //fprintf(stdout,"input end\n");     
+  return 0;
 }
 
 int yyerror(char const *s)
 {
-      fprintf(stderr, "%s\n", s);
+      //printf("%s\n", s);
       return 1;
 }

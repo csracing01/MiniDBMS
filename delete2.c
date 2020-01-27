@@ -1,174 +1,21 @@
+/******************************************DELETION*************************************/
+
 #include <stdio.h>
 #include <conio.h>
 #include <string.h>
 #include <stdlib.h>
 
-
 char query[50];
 extern FILE *fp;
-int deleted_val_counter=0;
+extern int row;
 
-int same_colnm_check(char attr[][50],char *col,int col_count)
-{
-	int i=0;
-	while(i<col_count)
-	{
-		//printf("col: %d\n",attr[i]);
-		if(strcmp(attr[i],col) == 0)
-		  return 1;
-		i++;
-	}
-	return 0;
-}
-
-int do_delete(char buff[30],char op[3],char val[10], int not)
-{
-	int n = strlen(op);
-	//printf("\nin do del with value %s\n",val);
-	switch(n)
-	{
-		case 1: if(strcmp(op,"<") == 0)
-		          if(not)
-				  {
-		            if(strcmp(buff,val) == 1)
-		            {
-		            	deleted_val_counter++;
-		            	return 1;
-		            }
-		            else
-		              return 0;
-                  }
-                  else
-                  {
-                  	 if(strcmp(buff,val) == -1)
-		            {
-		            	deleted_val_counter++;
-		            	return 1;
-		            }
-		            else
-		              return 0;
-                  }
-                  else
-                  if(strcmp(op,">") == 0)
-		          if(not)
-				  {
-		            if(strcmp(buff,val) == -1)
-		            {
-		            	deleted_val_counter++;
-		            	return 1;
-		            }
-		            else
-		              return 0;
-                  }
-                  else
-                  {
-                  	 if(strcmp(buff,val) == 1)
-		            {
-		            	deleted_val_counter++;
-		            	return 1;
-		            }
-		            else
-		              return 0;
-                  }
-                  break;
-        case 2: if(strcmp(op,"<=") == 0)
-		          if(not)
-				  {
-		            if(strcmp(buff,val) == 1)
-		            {
-		            	deleted_val_counter++;
-		            	return 1;
-		            }
-		            else
-		              return 0;
-                  }
-                  else
-                  {
-                  	 if(strcmp(buff,val) == 0 || strcmp(buff,val) == -1)
-		            {
-		            	deleted_val_counter++;
-		            	return 1;
-		            }
-		            else
-		              return 0;
-                  }  
-                  else
-                  if(strcmp(op,">=") == 0)
-		          if(not)
-				  {
-		            if(strcmp(buff,val) == -1)
-		            {
-		            	deleted_val_counter++;
-		            	return 1;
-		            }
-		            else
-		              return 0;
-                  }
-                  else
-                  {
-                  	 if(strcmp(buff,val) == 0 || strcmp(buff,val) == 1)
-		            {
-		            	deleted_val_counter++;
-		            	return 1;
-		            }
-		            else
-		              return 0;
-                  }
-                  else
-                  if(strcmp(op,"==") == 0)
-		          if(not)
-				  {
-		            if(strcmp(buff,val) != 0)
-		            {
-		            	deleted_val_counter++;
-		            	return 1;
-		            }
-		            else
-		              return 0;
-                  }
-                  else
-                  {
-                  	 if(strcmp(buff,val) == 0)
-		            {
-		            	deleted_val_counter++;
-		            	return 1;
-		            }
-		            else
-		              return 0;
-                  }
-                  else
-                  if(strcmp(op,"!=") == 0)
-		          if(not)
-				  {
-		            if(strcmp(buff,val) == 0)
-		            {
-		            	deleted_val_counter++;
-		            	return 1;
-		            }
-		            else
-		              return 0;
-                  }
-                  else
-                  {
-                  	 if(strcmp(buff,val) != 0)
-		            {
-		            	deleted_val_counter++;
-		            	return 1;
-		            }
-		            else
-		              return 0;
-                  }
-                  break;
-        default: printf("operation length >2");
-                
-	}
-}
 
 void deletion()
 {
 	int condition=1,not_cond=0;
-    char tabl_nm[30],tabl_nm_ext[30],col_nm[30],val[10],operation[3];
-
+    char tabl_nm[30],tabl_nm_ext[30],col_nm[30],val[10],operation[3],type[50];
+    strset(type,'\0');
+    row = 0;
 	fscanf(fp,"%s", query);
 	fscanf(fp,"%s", query);
 	strcpy(tabl_nm,query);
@@ -191,20 +38,17 @@ void deletion()
     }
 	FILE *table_fp, *schema_fp, *new_table, *temp_fp;
 	char ref_value[30][50],ref_table[30],ref_col[30];
-	
-	if(check_table_exists(tabl_nm) == 0)
+	if(table_exist(tabl_nm) == 0)
 	{
-		printf("\nTable %s does not exist in the database!!!", tabl_nm);
-		printf("\n\n\t\tINVALID OPERATION\n");
+		printf("Invalid: %s doesnot exist",tabl_nm);
 		return;
 	}
-	
 	int col_count=0,ref_count = 0, ref_val_count = 0;
 	if(!condition)
 	{
 		if(remove(tabl_nm_ext) != 0)
 		{
-			printf("Cannot delete %s\n",query);
+			printf("\nNo rows in table %s\n",query); ///////////////////////////////////////////////
 			return;
 		}
 		else
@@ -284,13 +128,35 @@ void deletion()
 	    while(strcmp(temp,"table") != 0 && !feof(schema_fp))
 	    {
 		   if(strcmp(temp,",") == 0)
+		   {
+		     fscanf(schema_fp,"%s",temp);
 			 count++;
+	       }
 		   if(strcmp(temp,"refby") == 0)
 		   {
 		   	 ref_count = count;
 			 fscanf(schema_fp,"%s",ref_table);
 			 fscanf(schema_fp,"%s",ref_col);
-			 break;
+			 //break;
+	       }
+	       if(count == col_count)
+	       {
+	       	if(strcmp(type,"\0") == 0)
+	       	{
+	       	
+	       	   fscanf(schema_fp,"%s",temp);
+	           strcpy(type,temp);
+	           if(!feof(schema_fp))
+	           {
+	             fscanf(schema_fp,"%s",temp);
+	             if(strcmp(temp,",") != 0 && strcmp(temp,"not") != 0 && strcmp(temp,"primary") != 0 && strcmp(temp,"unique") != 0 && 
+			             strcmp(temp,"table") != 0 )
+			     {
+			     	strcat(type," ");
+			     	strcat(type,temp);
+			     }
+		       }
+		    }
 	       }
 	       temp[0] = '\0';
 	       fscanf(schema_fp,"%s",temp);
@@ -323,32 +189,41 @@ void deletion()
 	    {
 	       while(query[i] != '\0' && query[i] != ';')
 	       {
-	     	  if((query[i] == '\'')  || (query[i] == '\"'))
+	     	  /*if((query[i] == '\'')  || (query[i] == '\"'))
 		         i++;
-		      else
+		      else*/
 		         val[j++] = query[i++];
 		         //printf("\n%c\n",val[j-1]);
 	       }
+	       if(query[i]==';')
+	         break;
 	       query[0] = '\0';
 	       fscanf(fp,"%s",query);
 	       //printf("\n%s\n",query);
 	       i = 0;
         }
-        while(query[i] != '\0' && query[i] != ';')
+        val[j]='\0';
+        /*while(query[i] != '\0' && query[i] != ';')
 	    {
-	       if((query[i] == '\'')  || (query[i] == '\"'))
+	       /*if((query[i] == '\'')  || (query[i] == '\"'))
 		       i++;
 		   else
+		   
 		      val[j++] = query[i++];
 		      //printf("\n%c\n",val[j-1]);
-	    }
-	    //printf("value : %s\n",val);
-    
-
+	    }*/
+	    //printf("\ntype : %s\nvalue : %s\n",type,val);
+        if(type_check(type,val))
+        {
+        	printf("\nInvalid syntax: type of given value doesnot match\n");
+        	return;
+        }
+        strcpy(tabl_nm_ext,tabl_nm);
+		strcat(tabl_nm_ext,".txt");
         table_fp = fopen(tabl_nm_ext,"r");
         if(table_fp == NULL)
         {
-    	  printf("%s cannot be opened\n",tabl_nm);
+    	  printf("\nEMPTY. No row inserted in table %s.\n",tabl_nm);
     	  return;
         }
         new_table = fopen("newtable.txt","w");
@@ -384,7 +259,7 @@ void deletion()
 			}
 		    if(i == col_count)
 		    {
-	    	   if(do_delete(buff,operation,val,not_cond) == 1)
+	    	   if(check(buff,operation,val,not_cond) == 1)
 		    	      write = 0;
 		    	else
 		    	      ref_val_count--;
@@ -422,19 +297,26 @@ void deletion()
         if(rename("newtable.txt",tabl_nm_ext) != 0)
            printf("Error in renaming new table\n");
         
-        if(deleted_val_counter == 0)
+        if(row == 0)
           printf("No row deleted\n");
         else
-          printf("%d rows deleted",deleted_val_counter);
+        if(row == 1)
+           printf("\n1 row deleted\n");
+        else
+          printf("%d rows deleted",row);
     }
     
     if(ref_count)
     {
     	ref_count = columncount(ref_table,ref_col);
-    	//printf("\nref count : %d\n",ref_count);
     	strcpy(tabl_nm_ext,ref_table);
     	strcat(tabl_nm_ext,".txt");
     	table_fp = fopen(tabl_nm_ext,"r");
+    	if(table_fp==NULL)
+    	{
+    		printf("table noooooooooooot opened\n");
+    		return;
+    	}
     	char temp[30],buff[30];
     	int i=0;
     	new_table = fopen("newtable.txt","w");
@@ -456,7 +338,7 @@ void deletion()
 		       }
 		       
                i++;
-               //printf("ref_value :%s\n",ref_value[0]);
+              // printf("ref_value :%s\n",ref_value[0]);
                if(i == ref_count)
                {
                  if(!condition)
@@ -464,11 +346,13 @@ void deletion()
                  else
                  {
                   if(same_colnm_check(ref_value,buff,ref_val_count+1) == 1)
-                      strcpy(temp,"null");
+                         strcpy(temp,"null");
                  }
                }
-               if(!feof(temp_fp))
+               if(!feof(table_fp))
 		   	 	   fprintf(new_table,"%s %s ",temp,query);
+		   	   if(strcmp(query,";") == 0)
+		   	      i = 0;
 	
 		   }
         }

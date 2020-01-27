@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 #include "y.tab.h"
-
+struct yy_buffer_state* curr_buff();
 %}
 
 %%
@@ -59,7 +59,7 @@
 
 ("primary key"|"not null"|"unique")                                           { return CONSTRAINT; }
 
-(";")("\n")                                                                   { return END; }
+(";")(" ")*("\n")                                                             { return END; }
 
 (" ")                                                                         { }
 
@@ -77,7 +77,7 @@
 
 ("'")([a-zA-Z]+)("'")                                                         { return WORD; }
 
-("\"")([a-zA-Z0-9]+)*("\"")                                                   { return STRING; }
+("\"")([a-zA-Z0-9]+(" ")*)*("\"")                                             { return STRING; }
 
 ("(")                                                                         { return STARTBRACKET; }
 
@@ -88,3 +88,10 @@
 .                                                                             { return ELSE;  }
 
 %%
+
+struct yy_buffer_state* curr_buff()
+{
+    struct yy_buffer_state* b;
+    b = yy_current_buffer;
+    return b;
+}

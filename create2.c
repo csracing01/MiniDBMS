@@ -1,13 +1,15 @@
 #include <stdio.h>
 #include <conio.h>
 #include <string.h>
-#include <stdlib.h>
+#include <process.h>
+#include <math.h>
+//#include "header.h"
 
 
 char query[50];
 extern FILE *fp;
 
-int same_colnm_check(char attr[][30],char *col,int col_count)
+/*int same_colnm_check(char attr[][30],char *col,int col_count)
 {
 	int i=0;
 	while(i<col_count)
@@ -18,7 +20,7 @@ int same_colnm_check(char attr[][30],char *col,int col_count)
 		i++;
 	}
 	return 0;
-}
+}*/
 
 void create()
 {
@@ -26,9 +28,9 @@ void create()
 	fscanf(fp,"%s", query);
 	fscanf(fp,"%s", query);
 	
-	if(table_exist(query) == 0)//checking the existance of table name
+	if(table_exist(query) == 1)//checking the existance of table name
 	{
-		printf("Invalid: %s doesnot exist",query);
+		printf("Invalid: %s already exist",query);
 		return;
 	}
 	if(strcmp(query,"schema") == 0 || strcmp(query,"temp") == 0 || strcmp(query,"input") == 0 || strcmp(query,"newtable") == 0 )
@@ -40,9 +42,9 @@ void create()
 	temp_fp = fopen("temp.txt", "w");
 	fprintf(temp_fp,"table %s ",query);
     strcpy(tabl_nm,query);
-	char attr[20][30];
+	char attr[20][50];
 	int attr_name=1,foreign=0,primary=0;
-	int col_count=0;
+	int type_check = 0,col_count=0;
 	char tb_nm[10],col_nm[10];
     while(!feof(fp))
 	{
@@ -86,7 +88,7 @@ void create()
         	  	    //attr[col_count]=(char *)malloc(sizeof(*ptr));
         	  	    strcpy((attr[col_count]),ptr);
         	  	
-        	  	    printf("col : %s",attr[col_count]);
+        	  	    //printf("col : %s",attr[col_count]);
         	  	    col_count++;
         	  	    attr_name = 0;
         	      }
@@ -117,6 +119,43 @@ void create()
         	    		
         	    }
               }
+              if(type_check)
+              {
+              	type_check = 0;
+              	if(strcmp(ptr,"not") != 0 && strcmp(ptr,"unique") != 0 && strcmp(ptr,"primary") != 0 && strcmp(ptr,",") != 0 && !feof(fp))
+              	{
+              		int len;
+              		if(*(ptr+1) == '\0')
+		            {
+		               len = *(ptr);
+		               len -= 48;
+		            }
+		            else
+		            {
+		            	int k = 1;
+                        while(*(ptr+k) != '\0')
+			            k++;
+
+			            int v = k;
+			            k=1;
+			            while(*(ptr+k) != '\0')
+			            {
+				           len += (*(ptr+k) - 48) * pow(10,v);
+				           v--;
+				           k++;
+			            }
+		            }
+		            
+		            if(len<=0)
+		            {
+		            	printf("\nInvalid syntax: size must be positive\n" );
+		            	fclose(temp_fp);
+		            	return;
+		            }
+              	}
+              }
+              if(strcmp(ptr,"char") == 0 || strcmp(ptr,"varchar") == 0 || strcmp(ptr,"double") == 0 )
+                  type_check = 1;
         	  if(strcmp(ptr,",") == 0)
         	      attr_name = 1;
         	  if(strcmp(ptr,"primary") == 0)
@@ -129,7 +168,7 @@ void create()
         	  		return;
         	  	}
         	  }
-		      printf("%s ", ptr); 
+		      //printf("%s ", ptr); 
 			  fprintf(temp_fp,"%s ",ptr);    //attr, type, constraint write to schema file 
 		      ptr = strtok(NULL, " ");  
               
@@ -219,13 +258,14 @@ void create()
         	   printf("Error in deleting old schema\n");
         	if(rename("newschema.txt","schema.txt") != 0)
         	   printf("Error in renaming new schema file\n");
-        	schema_fp=fopen("schema.txt","a+");
+        	
         }
     }
     table_fp=fopen("table.txt","a+");
     fprintf(table_fp,"%s ", tabl_nm);
     fclose(table_fp);
     temp_fp=fopen("temp.txt","r");
+    schema_fp=fopen("schema.txt","a+");
     while(!feof(temp_fp))
     {
     	query[0]='\0';
