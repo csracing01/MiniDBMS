@@ -14,13 +14,13 @@ foreign key(attribute_name) references other_table_name(its_attribute_name));
 Note: User can enter foreign key constraint at end only (after all the attribute names with their types). And other constraints (not null/unique/primary key) must be entered immediately after the type of the respective attribute.
 
 DATA TYPES ALLOWED:
-	Int
-	Char
-	Date
-	Boolean
-	Varchar() – string with variable length
-	Char() – string with fixed length
-	Double() – floating-point number with precision
+a) Int
+b) Char
+c) Date
+d) Boolean
+e) Varchar() – string with variable length
+f) Char() – string with fixed length
+g) Double() – floating-point number with precision
 
 2.	INSERT
 
